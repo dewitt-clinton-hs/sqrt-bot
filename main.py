@@ -30,13 +30,15 @@ class Bot:
         self.intake = Motor(Ports.PORT4) # Connect to the motor at port 4 (controlling the intake)
         self.intake_button = Bumper(brain.three_wire_port.d) # Connect to the button on port D of the three wire port
 
-    def drive(self, direction, speed):
-        self.left_wheel.spin(direction, speed)
-        self.right_wheel.spin(direction, speed * -1) # Turn at the same speed but reverse the direction
+    def f(self, pos): return (pos**2 * 0.01) + pos # Function to convert stick position to an appropriate RPM (0.01x^2 + x)
 
-    def turn(self, direction, speed):
-        self.left_wheel.spin(direction, speed)
-        self.right_wheel.spin(direction, speed)
+    def drive(self, pos):
+        self.left_wheel.spin(FORWARD, self.f(pos))
+        self.right_wheel.spin(FORWARD, self.f(pos) * -1) # Turn at the same speed but reverse the direction
+
+    def turn(self, pos):
+        self.left_wheel.spin(FORWARD, self.f(pos))
+        self.right_wheel.spin(FORWARD, self.f(pos))
 
     def stop(self):
         self.left_wheel.stop()
@@ -44,11 +46,11 @@ class Bot:
 
 class BotController:
     def __init__(self):
-        self.left_x = controller.axis1 # Axis 1 of the controller is the left-right movement of the right joystick
-        self.left_y = controller.axis2 # Axis 2 of the controller is the up-down movement of the right joystick
+        self.right_y = controller.axis1 # Axis 1 of the controller is the left-right movement of the right joystick
+        self.right_x = controller.axis2 # Axis 2 of the controller is the up-down movement of the right joystick
 
-        self.right_x = controller.axis3 # Axis 3 of the controller is the up-down movement of the left joystick
-        self.right_y = controller.axis4 # Axis 4 of the controller is the left movement of the left joystick
+        self.left_x = controller.axis3 # Axis 3 of the controller is the up-down movement of the left joystick
+        self.left_y = controller.axis4 # Axis 4 of the controller is the left movement of the left joystick
 
         self.controls = [self.right_x, self.right_y, self.left_y, self.left_x] # List containing the controls
 
@@ -65,17 +67,17 @@ sqrt_controller = BotController() # Create an instance of BotController, which r
 
 while True:
     sqrt_controller.update_controls() # Constantly update the positions of the joysticks
-    left_y, right_x = bot_controls["left_y"], bot_controls["right_x"] # Joysticks to go forward/back and left/right
 
-    # Defining conditions with deadzones
-    not_turning = right_x > -15 and right_x < 15
-    not_driving = left_y > -15 and left_y < 15
+    # Controls
+    right_x = bot_controls["right_x"]
+    right_y = bot_controls["right_y"]
+    left_y = bot_controls["left_y"]
+    left_x = bot_controls["left_x"]
 
-    if not not_driving and not_turning: # If driving (not not driving) and not turning
-        sqrt_bot.drive(FORWARD, left_y) # Drive at the [stick position]RPM (if negative, wheels go in reverse)
-    else: sqrt_bot.stop() # In any other case, just stop the bot
+    # Defining conditions with deadzones (stop if the joystick position is above -7 and below 7)
+    driving = right_y < -7 or right_y > 7
+    turning = left_x < -7 or left_x > 7
 
-
-    brain.screen.print("LEFT_Y: " + str(bot_controls["left_y"]))
-    brain.screen.new_line()
-    brain.screen.print("LEFT_X: " + str(bot_controls["left_x"]))
+    if turning: sqrt_bot.turn(left_x)
+    elif driving: sqrt_bot.drive(right_y)
+    else: sqrt_bot.stop()
