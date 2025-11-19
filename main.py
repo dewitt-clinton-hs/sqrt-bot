@@ -64,3 +64,12 @@ sqrt_bot = Bot() # Create an instance of SqrtBot, which represents the robot
 
 while True:
     update_controls() # Constantly update the positions of the joysticks
+
+    # Define moving conditions with deadzones (joystick position above 10 or below -10)
+    turning = bot_controls["right_x"] > 10 or bot_controls["right_x"] < -10
+    driving = bot_controls["left_y"] > 10 or bot_controls["left_y"] < -10
+
+    # Note: Movement functions take joystick position as their parameter, which are converted into RPM for the motors
+    if turning: sqrt_bot.turn(bot_controls["right_x"])
+    elif driving: sqrt_bot.drive(bot_controls["left_y"])
+    else: sqrt_bot.stop()
