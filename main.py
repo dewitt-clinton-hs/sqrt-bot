@@ -22,7 +22,7 @@ class Bot: # Make a blueprint for a robot
         self.intake = Motor(Ports.PORT4) # Connect to the motor at port 4 (controlling the intake)
         self.intake_button = Bumper(brain.three_wire_port.d) # Connect to the button on port D of the three wire port
 
-    def f(self, pos): return int(pos**2 * 0.01 + pos) # Function to convert stick position to an appropriate RPM (0.01x^2 + x)
+    def f(pos): return int(pos**2 * 0.01 + pos) # Function to convert stick position to an appropriate RPM (0.01x^2 + x)
 
     def drive(self, pos):
         self.left_wheel.spin(FORWARD, self.f(pos))
