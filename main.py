@@ -44,40 +44,23 @@ class Bot:
         self.left_wheel.stop()
         self.right_wheel.stop()
 
-class BotController:
-    def __init__(self):
-        self.right_y = controller.axis1 # Axis 1 of the controller is the left-right movement of the right joystick
-        self.right_x = controller.axis2 # Axis 2 of the controller is the up-down movement of the right joystick
-
-        self.left_x = controller.axis3 # Axis 3 of the controller is the up-down movement of the left joystick
-        self.left_y = controller.axis4 # Axis 4 of the controller is the left movement of the left joystick
-
-        self.controls = [self.right_x, self.right_y, self.left_y, self.left_x] # List containing the controls
-
-    def update_controls(self):
+def update_controls():
         global bot_controls # Define the controls as globally-scoped variables so the rest of the code can access them
+        
+        # Defining all of the controls based on their axes
+        right_x = controller.axis1
+        right_y = controller.axis2
+        left_y = controller.axis3
+        left_x = controller.axis4
+        
+        controls = [right_x, right_y, left_y, left_x] # A list of all the controls
 
         x = 0 # Represents the index of the controls list
         for i in bot_controls:
-            bot_controls[i] = self.controls[x].position() # Set the key of bot_controls with the position of the corresponding control
+            bot_controls[i] = controls[x].position() # Set the key of bot_controls with the position of the corresponding control
             x += 1 # Increment the index by 1 for the next loop
 
 sqrt_bot = Bot() # Create an instance of SqrtBot, which represents the robot
-sqrt_controller = BotController() # Create an instance of BotController, which represents the controller we use to drive sqrt_bot
 
 while True:
-    sqrt_controller.update_controls() # Constantly update the positions of the joysticks
-
-    # Controls
-    right_x = bot_controls["right_x"]
-    right_y = bot_controls["right_y"]
-    left_y = bot_controls["left_y"]
-    left_x = bot_controls["left_x"]
-
-    # Defining conditions with deadzones (stop if the joystick position is above -7 and below 7)
-    driving = right_y < -7 or right_y > 7
-    turning = left_x < -7 or left_x > 7
-
-    if turning: sqrt_bot.turn(left_x)
-    elif driving: sqrt_bot.drive(right_y)
-    else: sqrt_bot.stop()
+    update_controls() # Constantly update the positions of the joysticks
