@@ -13,30 +13,48 @@ from vex import *
 brain = Brain()
 controller = Controller()
 
-class Bot: # Make a blueprint for a robot
-    def __init__(self):
-        self.left_wheel = Motor(Ports.PORT1) # Connect to the motor at port 1 (controlling the left wheel)
-        self.right_wheel = Motor(Ports.PORT2) # Connect to the motor at port 2 (controlling the right wheel)
+# Motor connections via port
+left_wheel = Motor(Ports.PORT1) # Connect to the motor at port 1 (controlling the left wheel)
+right_wheel = Motor(Ports.PORT2) # Connect to the motor at port 2 (controlling the right wheel)
+conveyor = Motor(Ports.PORT3) # Connect to the motor at port 3 (controlling the conveyor belt)
+intake = Motor(Ports.PORT4) # Connect to the motor at port 4 (controlling the intake) 
 
-        self.conveyor = Motor(Ports.PORT3) # Connect to the motor at port 3 (controlling the conveyor belt)
-        self.intake = Motor(Ports.PORT4) # Connect to the motor at port 4 (controlling the intake)
-        self.intake_button = Bumper(brain.three_wire_port.d) # Connect to the button on port D of the three wire port
+# Note: The right wheel's direction is the reverse of the left wheel. So FORWARD for the left wheel is REVERSE for the right wheel and vice versa.
+def drive(pos):
+    left_wheel.spin(FORWARD, pos * 2.5)
+    right_wheel.spin(FORWARD, pos * -2.5)
 
-    def f(pos): return int(pos**2 * 0.01 + pos) # Function to convert stick position to an appropriate RPM (0.01x^2 + x)
+def turn(pos):
+    left_wheel.spin(FORWARD, pos * 2.5)
+    right_wheel.spin(FORWARD, pos * 2.5)
 
-    def drive(self, pos):
-        self.left_wheel.spin(FORWARD, self.f(pos))
-        self.right_wheel.spin(FORWARD, self.f(pos) * -1) # Turn at the same speed but reverse the direction
+def stop():
+    left_wheel.stop()
+    right_wheel.stop()
 
-    def turn(self, pos):
-        self.left_wheel.spin(FORWARD, self.f(pos))
-        self.right_wheel.spin(FORWARD, self.f(pos))
+while True: # Infinite loop
 
-    def stop(self):
-        self.left_wheel.stop()
-        self.right_wheel.stop()
+    if controller.axis1.position() > 0: turn(controller.axis1.position())
+    elif controller.axis1.position() < 0: turn(controller.axis1.position())
+    elif controller.axis3.position() > 0: drive(controller.axis3.position())
+    elif controller.axis3.position() < 0: drive(controller.axis3.position())
+    else: stop()
 
-sqrt_bot = Bot() # Create an instance of SqrtBot, which represents the robot
+    if controller.buttonR1.pressing(): conveyor.spin(FORWARD, 100)
+    elif controller.buttonL1.pressing(): conveyor.spin(REVERSE, 100)
+    else: conveyor.stop()
 
-controller.axis3.changed(sqrt_bot.drive(), controller.axis3.position())
-controller.axis1.changed(sqrt_bot.turn(), controller.axis1.position())
+    controls = { # Collection of all the joystick directions and their corresponding position
+        "right_x": controller.axis1.position(),
+        "right_y": controller.axis2.position(),
+        "left_y": controller.axis3.position(),
+        "left_x": controller.axis4.position()
+    }
+
+    for i in controls: # Error logging
+        if controls[i] > 10 or controls[i] < -10: # If position changed
+
+            # Print position
+            brain.screen.print(i + " = " + str(controls[i]))
+            brain.screen.new_line()
+            brain.screen.clear_screen()
