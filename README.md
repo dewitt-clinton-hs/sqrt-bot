@@ -5,8 +5,8 @@ VEX V5 Python Robot
 The side of our robot looks like a square root function, so I named it the Square Root Bot.
 
 ## Authors:
-**Autonomous Programmer:** Camila Rodriguez &
-**Manual Programmer:** Arymus Reyes
+**Autonomous Programmer:** Camila Rodriguez  
+**Manual Programmer:** Arymus Reyes  
 I (Arymus Reyes) published this code and have been responsible for all commits to this repo.
 
 ## How did it go?
