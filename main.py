@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 # 	Module:       main.py                                                      #
-# 	Author:       student                                                      #
+# 	Author:       Arymus Reyes & Camila Rodriguez                                                      #
 # 	Created:      11/3/2025, 3:03:12 PM                                        #
 # 	Description:  V5 project                                                   #
 #                                                                              #
@@ -17,44 +17,36 @@ controller = Controller()
 left_wheel = Motor(Ports.PORT1) # Connect to the motor at port 1 (controlling the left wheel)
 right_wheel = Motor(Ports.PORT2) # Connect to the motor at port 2 (controlling the right wheel)
 conveyor = Motor(Ports.PORT3) # Connect to the motor at port 3 (controlling the conveyor belt)
-intake = Motor(Ports.PORT4) # Connect to the motor at port 4 (controlling the intake) 
+intake = Motor(Ports.PORT4, True) # Connect to the motor at port 4 (controlling the intake) and reverse the direction
 
-# Note: The right wheel's direction is the reverse of the left wheel. So FORWARD for the left wheel is REVERSE for the right wheel and vice versa.
-def drive(pos):
-    left_wheel.spin(FORWARD, pos * 2.5)
-    right_wheel.spin(FORWARD, pos * -2.5)
+drive_train = DriveTrain(left_wheel, right_wheel)
+pick_up = MotorGroup(intake, conveyor)
 
-def turn(pos):
-    left_wheel.spin(FORWARD, pos * 2.5)
-    right_wheel.spin(FORWARD, pos * 2.5)
+def autonomous(): # Autonomous code
+    drive_train.drive_for(FORWARD, 12, INCHES)
 
-def stop():
-    left_wheel.stop()
-    right_wheel.stop()
+def driver(): # Manual code
 
-while True: # Infinite loop
+    # Note: The right wheel's direction is the reverse of the left wheel. So FORWARD for the left wheel is REVERSE for the right wheel and vice versa.
+    while True:
+        if controller.axis1.position() > 0 or controller.axis1.position() < 0:
+            left_wheel.spin(FORWARD, controller.axis1.position() * 3)
+            right_wheel.spin(FORWARD, controller.axis1.position() * 3)
 
-    if controller.axis1.position() > 0: turn(controller.axis1.position())
-    elif controller.axis1.position() < 0: turn(controller.axis1.position())
-    elif controller.axis3.position() > 0: drive(controller.axis3.position())
-    elif controller.axis3.position() < 0: drive(controller.axis3.position())
-    else: stop()
+        elif controller.axis3.position() > 0 or controller.axis3.position():
+            left_wheel.spin(FORWARD, controller.axis3.position() * 3)
+            right_wheel.spin(FORWARD, controller.axis3.position() * -3)
 
-    if controller.buttonR1.pressing(): conveyor.spin(FORWARD, 100)
-    elif controller.buttonL1.pressing(): conveyor.spin(REVERSE, 100)
-    else: conveyor.stop()
+        else:
+            left_wheel.stop()
+            right_wheel.stop()
 
-    controls = { # Collection of all the joystick directions and their corresponding position
-        "right_x": controller.axis1.position(),
-        "right_y": controller.axis2.position(),
-        "left_y": controller.axis3.position(),
-        "left_x": controller.axis4.position()
-    }
+        if controller.buttonR1.pressing(): conveyor.spin(FORWARD, 200)
+        elif controller.buttonL1.pressing(): conveyor.spin(REVERSE, 200)
+        else: conveyor.stop()
+        
+        if controller.buttonB.pressing(): intake.spin(FORWARD, 200)
+        elif controller.buttonA.pressing(): intake.spin(REVERSE, 200)
+        else: intake.stop()
 
-    for i in controls: # Error logging
-        if controls[i] > 10 or controls[i] < -10: # If position changed
-
-            # Print position
-            brain.screen.print(i + " = " + str(controls[i]))
-            brain.screen.new_line()
-            brain.screen.clear_screen()
+competition = Competition(driver, autonomous)
